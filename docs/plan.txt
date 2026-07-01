@@ -14,11 +14,11 @@ AI Agent
   ├─ 1. Embed query (local, CPU)
   │
   ├─ 2. Route đến domain phù hợp
-  │     POST vector_query → Server Gate (VPS nhẹ / Cloudflare Worker)
-  │     ← { domain, signed_url }
+  │     Tải manifest.json (2KB, cache local)
+  │     cosine(query, centroid từng domain) → chọn domain
   │
   ├─ 3. Tải index.hnsw của domain đó
-  │     signed_url → Cloudflare R2 (free 10GB)
+  │     URL tĩnh → GitHub Pages / R2
   │     cache local, ETag check cập nhật
   │
   ├─ 4. ANN search local (HNSW)
@@ -34,20 +34,24 @@ AI Agent
 
 ## Các thành phần
 
-### Server-side (siêu nhẹ, có thể serverless)
+### Storage (chỉ là file tĩnh, không cần server)
 
-| Component | Nhiệm vụ | Nặng không |
-|-----------|----------|------------|
-| **Gate Model** | Nhận vector → chọn domain → trả signed URL | 30K params (120KB), <1ms |
-| **R2 Storage** | Lưu trữ các file index.hnsw theo domain | Chỉ là CDN, 0 CPU |
-| **Manifest** | Danh sách domain + centroid + phiên bản index | ~2KB |
+| File | Nội dung | Kích thước |
+|------|----------|------------|
+| `manifest.json` | Danh sách domain + centroid + URL + version | ~2KB |
+| `index.code.hnsw` | HNSW index cho domain "code" | ~3-10MB |
+| `index.text.hnsw` | HNSW index cho domain "text" | ~3-10MB |
+| ... | ... | ... |
+
+Host trên GitHub Pages hoặc Cloudflare R2 — miễn phí, CDN toàn cầu, zero server.
 
 ### Client-side (shard-cli)
 
 | Bước | Tốn gì | Lần đầu | Lần sau (cache) |
 |------|--------|---------|-----------------|
 | Embed query | CPU ~10ms | ✓ | ✓ |
-| Gate route | Network ~1KB POST | ✓ | ✓ |
+| Tải manifest | Network ~2KB | ✓ | ETag ~304 |
+| Route (cosine centroid) | CPU <0.01ms | ✓ | ✓ |
 | Tải index | Network ~3-10MB | ✓ | ETag ~304 |
 | ANN search | CPU <1ms | ✓ | ✓ |
 
@@ -77,10 +81,9 @@ Máy user → Cloudflare Tunnel → Internet
 
 - [ ] `shard-types` — ShardId, ShardInfo, ShardDescription (đã có)
 - [ ] `shard-cli` — MCP stdio server (đã có skeleton)
-  - [ ] Tool: `shard_search` — embed → gate → tải index → ANN → top-K
+  - [ ] Tool: `shard_search` — embed → manifest → centroid route → tải index → ANN → top-K
   - [ ] Tool: `shard_connect` — kết nối WebSocket/HTTP tới shard
   - [ ] Tool: `shard_execute` — gọi execute() trên shard từ xa
-  - [ ] Tool: `shard_publish` — hash, ký, build index, push lên R2
-- [ ] Gate Model — learned routing model (30K params, export ONNX)
-- [ ] Index Builder — incremental HNSW, push R2, update manifest
+  - [ ] Tool: `shard_publish` — hash, ký, build index, push lên storage
+- [ ] Index Builder — incremental HNSW, push storage, update manifest
 - [ ] `shard-server` — Registry MCP (metadata, search by tag) (repo riêng)
