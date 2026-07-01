@@ -1,0 +1,86 @@
+# Shardnet Plan
+
+## Tổng quan
+Shardnet = Giao thức giúp AI Agent tìm & kết nối tới Shard (đơn vị tri thức thực thi được).
+Không blockchain, không P2P, không VPS nặng.
+
+---
+
+## Kiến trúc
+
+```
+AI Agent
+  │
+  ├─ 1. Embed query (local, CPU)
+  │
+  ├─ 2. Route đến domain phù hợp
+  │     POST vector_query → Server Gate (VPS nhẹ / Cloudflare Worker)
+  │     ← { domain, signed_url }
+  │
+  ├─ 3. Tải index.hnsw của domain đó
+  │     signed_url → Cloudflare R2 (free 10GB)
+  │     cache local, ETag check cập nhật
+  │
+  ├─ 4. ANN search local (HNSW)
+  │     index.hnsw → top-K ShardInfo
+  │     ← { name, hash_id, tags, endpoint, public_key }
+  │
+  └─ 5. Kết nối & tương tác Shard
+        shard_connect(endpoint) → HTTP / WebSocket
+        shard_execute(hash_id)  → chạy code, load context
+```
+
+---
+
+## Các thành phần
+
+### Server-side (siêu nhẹ, có thể serverless)
+
+| Component | Nhiệm vụ | Nặng không |
+|-----------|----------|------------|
+| **Gate Model** | Nhận vector → chọn domain → trả signed URL | 30K params (120KB), <1ms |
+| **R2 Storage** | Lưu trữ các file index.hnsw theo domain | Chỉ là CDN, 0 CPU |
+| **Manifest** | Danh sách domain + centroid + phiên bản index | ~2KB |
+
+### Client-side (shard-cli)
+
+| Bước | Tốn gì | Lần đầu | Lần sau (cache) |
+|------|--------|---------|-----------------|
+| Embed query | CPU ~10ms | ✓ | ✓ |
+| Gate route | Network ~1KB POST | ✓ | ✓ |
+| Tải index | Network ~3-10MB | ✓ | ETag ~304 |
+| ANN search | CPU <1ms | ✓ | ✓ |
+
+### User tự host Shard (bảo mật)
+
+```
+Máy user → Cloudflare Tunnel → Internet
+  - Không mở port, không lộ IP
+  - TLS tự động, chống scan, chống DDoS
+  - ShardInfo.endpoint = public URL cloudflare, không phải IP thật
+  - Vector tấn công duy nhất: chính shard đó (lỗi logic, RCE)
+```
+
+---
+
+## Bảo mật & Trust
+
+- **SHA-512**: Xác minh nội dung toàn vẹn (không collision)
+- **Ed25519 Signature**: Xác minh tác giả (public key = identity)
+- **Trust model**: Local whitelist — mỗi agent tự quản lý key tin cậy
+- **Key mới / lạ**: Cảnh báo, user confirm, không tự động trust
+- **Không**: Web-of-trust toàn cầu, stake, blockchain
+
+---
+
+## Lộ trình
+
+- [ ] `shard-types` — ShardId, ShardInfo, ShardDescription (đã có)
+- [ ] `shard-cli` — MCP stdio server (đã có skeleton)
+  - [ ] Tool: `shard_search` — embed → gate → tải index → ANN → top-K
+  - [ ] Tool: `shard_connect` — kết nối WebSocket/HTTP tới shard
+  - [ ] Tool: `shard_execute` — gọi execute() trên shard từ xa
+  - [ ] Tool: `shard_publish` — hash, ký, build index, push lên R2
+- [ ] Gate Model — learned routing model (30K params, export ONNX)
+- [ ] Index Builder — incremental HNSW, push R2, update manifest
+- [ ] `shard-server` — Registry MCP (metadata, search by tag) (repo riêng)
