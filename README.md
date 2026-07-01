@@ -5,7 +5,7 @@
 A content-addressable protocol that lets AI agents discover, connect, and interact with executable knowledge units called **Shards**.
 
 <div align="center">
-  <img src="assets/demo.png" alt="Shardnet Demo" width="600">
+  <img src="assets/images.png" alt="Shardnet Demo" width="600">
 </div>
 
 ## Install
