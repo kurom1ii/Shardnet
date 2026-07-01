@@ -1,0 +1,11 @@
+[package]
+name = "shard-cli"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+shard-types = { path = "../shard-types" }
+sha2.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio = { version = "1", features = ["io-util", "rt"] }

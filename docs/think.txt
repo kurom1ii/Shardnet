@@ -1,0 +1,7 @@
+AI Agents CLI 
+1. Call mcp ->
+    + Input đầu vào : text,images,code,video,file pdf, file X types
+    + Output đầu ra : địa chỉ hash và ip để kết nối tới shards đó
+2. Tương tác
+    + tool shard_connect tới ip đó ( shard sẽ tự expose HTTP,websocket,tcp/ip hoặc udp/ip)
+    + tool shard_execute sẽ gọi hàm execute() để tự biết thực thi các kiến thức/khả năng của 1 shards trong đó

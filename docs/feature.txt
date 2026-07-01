@@ -1,0 +1,17 @@
+Shards sẽ 
+1. Dữ liệu là gì
+    + Định nghĩa
+    + Index, địa chỉ
+    + Hash phải là 1 khối dữ liệu duy nhất
+2. Dữ liệu gồm gì
+    + Văn bản, tài liệu, âm nhạc,hình ảnh,video, gif
+    + File, folder , file upload
+    + Code, binary có thể execute
+    + Bất cứ thứ gì có thể có trên internet đều có thể thành Shard
+    + Thực thể sống có thể tương tác lại ( LLM )
+    + Memory,skills,vector knowledge
+3. Dữ liệu được tương tác thế nào
+    + AI sẽ load nó dưới dạng context hoặc load nó dạng execute
+    + AI sẽ tương tác liên tục với nó 
+    + AI sẽ gọi tools/mcp hoặc giao tiếp với nó như 1 thực thể sống 
+    + Shards cũng có thể tự tương tác lại với AI qua 1 vòng lặp khép kín
