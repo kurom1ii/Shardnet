@@ -1,31 +1,29 @@
-# Shardnet — Quy tắc code
+# Shardnet — Code Rules
 
-## Nguyên tắc chung
-- Không viết comments (trừ khi thực sự cần giải thích logic phức tạp)
-- Không viết unit test (trừ khi được yêu cầu)
-- Tiếng Việt có dấu cho naming, mô tả, tool description
-- Code name (struct, enum, fn) dùng tiếng Anh snake_case
+## General
+- No comments (unless absolutely needed for complex logic)
+- No unit tests (unless requested)
+- Code names (struct, enum, fn) use English snake_case
 
-## Cấu trúc project
+## Project Structure
 ```
 crates/
-├── shard-server/    ← registry MCP server (chỉ metadata, không lưu content)
-├── shard-types/     ← ShardId, ShardInfo, ShardDescription (dùng chung)
-└── shard-cli/       ← ShardContent + Shard struct (dành cho provider tự host)
+├── shard-types/     ← ShardId, ShardInfo, ShardDescription (shared)
+└── shard-cli/       ← ShardContent + Shard struct (for self-hosted providers)
 ```
 
-## Quy tắc module
-- Mỗi file chỉ làm 1 nhiệm vụ rõ ràng
-- `types.rs` — struct/enum định nghĩa
+## Module Rules
+- Each file has one clear responsibility
+- `types.rs` — struct/enum definitions
 - `mcp.rs` — dispatch JSON-RPC methods
 - `tools.rs` — tool definitions + exec logic
 - `routes.rs` — HTTP handlers (SSE, messages)
 - `main.rs` — bootstrap + router setup
 
 ## Build
-- `edition = "2021"`
-- Dùng workspace dependencies tập trung trong root `Cargo.toml`
+- `edition = "2024"`
+- Use workspace dependencies centralized in root `Cargo.toml`
 
-## API conventions
-- MCP protocol: JSON-RPC 2.0 qua SSE transport
+## API Conventions
+- MCP protocol: JSON-RPC 2.0 over SSE transport
 - Tool response format: `{ "content": [{ "type": "text", "text": "..." }] }`

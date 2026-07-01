@@ -1,13 +1,13 @@
 [workspace]
 members = ["crates/shard-types", "crates/shard-cli"]
-# shard-server đã tách ra repo riêng: https://github.com/kurom1ii/shard-server
-# Clone về thư mục gốc nếu muốn build full: git clone https://github.com/kurom1ii/shard-server.git shard-server
-# Sau đó thêm "shard-server" vào members bên trên
+# shard-server is now a separate repo: https://github.com/kurom1ii/shard-server
+# Clone it to root if you want the full build: git clone https://github.com/kurom1ii/shard-server.git shard-server
+# Then add "shard-server" to the members list above
 resolver = "2"
 
 [workspace.package]
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [workspace.dependencies]
 serde = { version = "1", features = ["derive"] }
